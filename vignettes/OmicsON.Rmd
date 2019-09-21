@@ -1,0 +1,264 @@
+---
+title: "OmicsON"
+author: "Monika Piwowar, Wiktor Jurkowski, Ewa Gajda, Cezary Turek, Sonia Wrobel"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{OmicsON}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r global_options, include=TRUE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, error = TRUE)
+```
+
+# Table of Contents
+i. [About OmicsON](#about-omicson)
+i. [OmicsON workflow](#omicson-workflow)
+  * 1. [Set up mapping files](set-up-mapping-files)
+  * 2. [Data input](#input-data)
+  * 3. [Decorate data by Reactome data](#uecorate-data-by-reactome-data)
+  * 4. [Decorate data by STRING data](#decorate-data-by-string-data)
+  * 5. [Functional Ineractions DF](#functional-ineractions-df)
+  * 7. [Multivariate Statistical Analysis](#statistical-analysis)
+    * a. [CCA - Canonical Correlation Analysis](#cca---canonical-correlation-analysis)
+    * b. [PLS - Partial Least Squares Regression](#pls---partial-least-squares-regression)
+
+
+## About OmicsON
+OmicsON provides knowedge driven data regularisation to facilitate multivariate analysis of 'omics' data. Current release is targetting ChEBI, Reactome and STRING ontologies. 
+
+
+## OmicsON Workflow
+Below you will find OmicsON workflow described step by step. By following these steps and using examplary data included in this package user should get the same results as shown in this vignette. 
+
+
+### Set up mapping files
+It is important to set up OmicsON mapping. You can set it up by invoking function presented below. ChEBI to Reactome, Ensembl to Reactome and UniProt to Reactome mappings are required.
+
+```{r, results='asis', echo=TRUE}
+    OmicsON::setUpReactomeMapping(ChEBI2ReactomeFileURL = "https://reactome.org/download/current/ChEBI2Reactome.txt", 
+                                  Ensembl2ReactomeFileURL = "https://reactome.org/download/current/Ensembl2Reactome.txt", 
+                                  UniProt2ReactomeFileURL = "https://reactome.org/download/current/UniProt2Reactome.txt")
+```
+
+
+### Data input
+After setting up mapping, to start work with OmicsON you need to provide two 'omics' data sets in data frame form. Data frame can be created from files as in \extdata directory under package insallation directory. This files are in tab delimited files with headers (colnames and rownames). Files are in two sets; minimal and normal. Minimal was created artificialy to fast vignette processing and to help understand basis of OmicsON. Normal is a real data file, use it after minimal example please. Files are named respectively `nm-transcriptomics-min.txt`, `nm-lipidomics-min.txt` and `nm-transcriptomics.txt`, `nm-lipidomics.txt`.
+
+Below you can find first few lines of minimal data files presented in form of data frame. As you can see all of them have heades and colnames. To find them localization please run `system.file(package="OmicsON")`.
+You can use below snippet of code to load mentioned files into R environment:
+
+```{r, results = 'asis', echo=TRUE}
+pathToFileWithLipidomicsData <- system.file(package="OmicsON", 
+                                            "extdata", "nm-lipidomics-min.txt")
+lipidomicsInputData <- read.table(pathToFileWithLipidomicsData, header = TRUE)
+```
+```{r, results = 'asis'}
+knitr::kable(lipidomicsInputData[1:4, 1:7], caption = "Lipidomisc data")
+```    
+```{r, results = 'asis', echo=TRUE}
+pathToFileWithTranscriptomicsData <- system.file(package="OmicsON", 
+                                                 "extdata", "nm-transcriptomics-min.txt")
+transcriptomicsInputData <- read.table(pathToFileWithTranscriptomicsData, header = TRUE)
+```
+```{r, results = 'asis'}
+knitr::kable(transcriptomicsInputData[1:10, 1:7], caption = "Transcriptomics data")
+```
+
+
+### Decorate data by Reactome data
+
+As soon as you set up OmincsON and input data are loaded, you are ready to decorate data by data presented in Reactome database. It is done by searching of ontologically related molecules present in Reactome's pathways. For further processes in that vignette we are using minimal input data. Rows are chosen to present possible border cases in a short time. CHEBI:28661 has representation in Reactome pathways. CHEBI:36036, CHEBI:61205 are not not presented in Reactome mapping, but we can find  representat of that group by ontology in ChEBI database - CHEBI:53460, CHEBI:53487. CHEBI:35465 is not interesting case, not presented and no representants in ChEBI ontology, so mapping and decoration is empty for that id.
+
+```{r, echo=TRUE, results='hide'}
+decoratedByReactome <- OmicsON::decorateByReactomeData(
+    chebiMoleculesDf = lipidomicsInputData, 
+    chebiIdsColumnName = "ChEBI", organismTaxonomyId = '9606')
+```
+We are not printing `decoratedByReactome` here, because of problematic format. You can print it yourself in R console, then it is presented much better.
+
+What algorithm is behind the ontologies mapping? The first two columns of result table represent mapping of all small molecules to respective parents and children of ChEBI ontology: "root" denotes source IDs; if ID already exists in Reactome ontologyId column has the same value, if not but there is an alternative in the form of child or parent in ChEBI ontology, OmicsON put its id under "ontologyId" column. If we can not find root id and can not find any parent or children for it, OmicsON leave it empty.
+
+Full result's data frame contains respectively:
+
+- root - ChEBIs ids given by user,
+- ontologyId - ChEBI ids used in the calculation, it is taken from ChEBI ontology base on root,
+- ensembleIds - List including vector of Ensemble's Ids,
+- uniProtIds - List including vector of UniProt's Ids,
+- reactomeIds - List including vector of pathway's ids from Reactome DB,
+- genesSymbolsFromEnsemble - List including vector of gen's symbols from Reactome DB base on pathway and Ensemble's Ids,
+- genesSymbolsFromUniProt - List including vector of gen's symbols from Reactome DB base on pathway and UniProt's Ids,
+
+
+### Decorate data by STRING data
+
+When you have results from Reactome step, then you are ready to use decoration by STRING DB. In this part you search for any extra interactions of gens which you find in Reactome. STRING calls them neighbours. To do it just put results achived from Reactome's decoration step to `OmicsON::decorateByStringDbData` method and set `listOfEnsembleIdColumnName` attribute to proper value - `ensembleIds` or `uniProtIds`. This function produce data frame. Below we have presented two data frames respectively for `ensembleIds` and `uniProtIds`. This step is time consuming, so be patient please. 
+
+```{r, echo=TRUE, results='hide'}
+decoratedByStringBaseOnEnsembleIds <- OmicsON::decorateByStringDbData(
+    chebiIdsToReactomePathways = decoratedByReactome, 
+    listOfEnsembleIdColumnName = 'ensembleIds')
+decoratedByStringBaseOnUniProtIds <- OmicsON::decorateByStringDbData(
+    chebiIdsToReactomePathways = decoratedByReactome, 
+    listOfEnsembleIdColumnName = 'uniProtIds')
+```
+
+Data frame returned from this method introduces three new columns. Them are, respectively:
+
+- stringIds - List including vector of all STRING's ids used in computations. 
+- stringGenesSymbolsExpand - List including vector of all neighbours find in STRING database.
+- stringGenesSymbolsNarrow - List including vector of intersection of all neighbours per id from set of ids used in search.
+
+Data frames resulted from decoration by String DB is also not printed because of unusual formatting. You can print it easy by evaluating the vignette yourself, step by step.
+
+Please go to [Functional Ineractions DF](#functional-ineractions-df) to know how to convert above decorated structures to easily operative data frames.
+
+If you want to know how to traverse through data in decorated structure? I will present it on example. Moste importan is to understand that many cells include list of vectors! Mapping to Ensemble can give different results than mapping to UniProt, so it is worth to perform both.
+
+```{r, echo=TRUE, results='asis'}
+as.character(decoratedByStringBaseOnEnsembleIds[4, "root"])
+as.character(decoratedByStringBaseOnUniProtIds[4, "root"])
+```
+```{r, echo=TRUE, results='asis'}
+decoratedByStringBaseOnEnsembleIds[4, "ensembleIds"][[1]]
+decoratedByStringBaseOnUniProtIds[4, "uniProtIds"][[1]]
+```
+
+```{r, echo=TRUE, results='asis'}
+decoratedByStringBaseOnEnsembleIds[2, "stringGenesSymbolsNarrow"][[1]]
+decoratedByStringBaseOnUniProtIds[2, "stringGenesSymbolsNarrow"][[1]]
+```
+
+
+
+### Functional Ineractions DF
+You can create a functional interactions data frame by using this method:
+
+```{r, echo=TRUE, results='asis'}
+ontology2EnsembleFunctionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(
+    chebiToReactomeDataFrame = decoratedByReactome, 
+    singleIdColumnName = 'ontologyId', idsListColumnName = 'ensembleIds')
+
+ontology2UniProtFunctionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(
+    chebiToReactomeDataFrame = decoratedByReactome, 
+    singleIdColumnName = 'ontologyId', idsListColumnName = 'uniProtIds')
+
+ontology2GenesSymboleFromEnsembleFunctionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(
+    chebiToReactomeDataFrame = decoratedByReactome, 
+    singleIdColumnName = 'ontologyId', idsListColumnName = 'genesSymbolsFromEnsemble')
+
+ontology2GenesSymboleFromUniProtFunctionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(
+    chebiToReactomeDataFrame = decoratedByReactome, 
+    singleIdColumnName = 'ontologyId', idsListColumnName = 'genesSymbolsFromUniProt')
+
+ontology2GenesSymboleFromStringExpandFunctionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(
+    chebiToReactomeDataFrame = decoratedByStringBaseOnUniProtIds, 
+    singleIdColumnName = 'ontologyId', idsListColumnName = 'stringGenesSymbolsExpand')
+
+ontology2GenesSymboleFromStringNarrowFunctionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(
+    chebiToReactomeDataFrame = decoratedByStringBaseOnUniProtIds, 
+    singleIdColumnName = 'ontologyId', idsListColumnName = 'stringGenesSymbolsNarrow')
+```
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(ontology2EnsembleFunctionalInteractions, 6))
+knitr::kable(head(ontology2UniProtFunctionalInteractions, 6))
+knitr::kable(head(ontology2GenesSymboleFromEnsembleFunctionalInteractions, 6))
+knitr::kable(head(ontology2GenesSymboleFromUniProtFunctionalInteractions, 6))
+knitr::kable(head(ontology2GenesSymboleFromStringExpandFunctionalInteractions, 6))
+knitr::kable(head(ontology2GenesSymboleFromStringNarrowFunctionalInteractions, 6))
+```
+
+
+### Statistical Analysis
+
+OmicsON provides two statistical methods to analyse those data:
+
+- CCA - Canonical Correlation Analysis
+- PLS - Partial Least Squares Regression
+
+
+#### CCA - Canonical Correlation Analysis
+
+Calculate CCA on data decorated by String DB:
+
+```{r, echo=TRUE, results='asis'}
+ccaResultsNarrow1 <- OmicsON::makeCanonicalCorrelationAnalysis(
+    xNamesVector = ontology2GenesSymboleFromStringNarrowFunctionalInteractions$stringGenesSymbolsNarrow,
+    yNamesVector = ontology2GenesSymboleFromStringNarrowFunctionalInteractions$root,
+    XDataFrame = transcriptomicsInputData,
+    YDataFrame = lipidomicsInputData, xCutoff = 1, yCutoff = 1)
+ccaResultsNarrow2 <- OmicsON::makeCanonicalCorrelationAnalysis(
+    xNamesVector = ontology2GenesSymboleFromStringNarrowFunctionalInteractions$stringGenesSymbolsNarrow,
+    yNamesVector = ontology2GenesSymboleFromStringNarrowFunctionalInteractions$root,
+    XDataFrame = transcriptomicsInputData,
+    YDataFrame = lipidomicsInputData, xCutoff = 0.5, yCutoff = 1)
+```
+
+If you fall into "singular matrix" problem presented bellow;
+```{r, echo=TRUE, results='asis', error=TRUE}
+ccaResultsExpand1 <- OmicsON::makeCanonicalCorrelationAnalysis(
+    xNamesVector = ontology2GenesSymboleFromStringExpandFunctionalInteractions$stringGenesSymbolsExpand,
+    yNamesVector =  ontology2GenesSymboleFromStringExpandFunctionalInteractions$root,
+    XDataFrame = transcriptomicsInputData,
+    YDataFrame = lipidomicsInputData)
+```
+
+Think about xCutoff, yCutoff options. You can use it to remove highly correlated variables. Below the xCutoff is set to 0.7 and it makes the problem solvable. 
+```{r, echo=TRUE, results='asis'}
+ccaResultsExpand1 <- OmicsON::makeCanonicalCorrelationAnalysis(
+    xNamesVector = ontology2GenesSymboleFromStringExpandFunctionalInteractions$stringGenesSymbolsExpand,
+    yNamesVector =  ontology2GenesSymboleFromStringExpandFunctionalInteractions$root,
+    XDataFrame = transcriptomicsInputData,
+    YDataFrame = lipidomicsInputData, 
+    xCutoff = 0.7)
+```
+
+Below we presented the list of problems thet could be solved in the same way, by manipulation of xCutoff and yCutoff arguments. It is important to know that sometimes you have to increase cutoff. Best practice is to start from 1 and go down by 0.1 ticks on both. If it not help then try this approach to one cutoff, for example change x with frozen y value.
+
+- NaNs produced
+- singular matrix 'a' in solve
+- imaginary parts discarded in coercion
+- 'y' must be numeric
+
+
+Ploting CCA results. First plot presents same CCA results on the same data sets, but with different `xCutoff` argument, set respectively to 1 and 0.5.
+Second plot represents CCA results on Expand data set.
+
+```{r, fig.show='hold', fig.width=7, fig.height=5, echo=TRUE, fig.align='center'}
+par(mfrow=c(1,2))
+OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResultsNarrow1)
+OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResultsNarrow2)
+par(mfrow=c(1,1))
+OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResultsExpand1)
+```
+
+
+
+#### PLS - Partial Least Squares Regression
+
+
+Calculate PLS on data decorated by String DB:
+
+```{r, echo=TRUE, results='hide'}
+PLSResults <- OmicsON::makePartialLeastSquaresRegression(
+    xNamesVector = ontology2GenesSymboleFromStringNarrowFunctionalInteractions$stringGenesSymbolsNarrow,
+    yNamesVector = ontology2GenesSymboleFromStringNarrowFunctionalInteractions$root,
+    XDataFrame = transcriptomicsInputData,
+    YDataFrame = lipidomicsInputData)
+```
+
+How to plot results from PLS? Below you can find code which represents PLS results in user friendly form:
+
+```{r, fig.show='hold', fig.width=7, fig.height=5, echo=TRUE}
+OmicsON::plotRmsepForPLS(PLSResults)
+```  
+
+```{r, fig.show='hold', fig.width=7, fig.height=5, echo=TRUE}
+OmicsON::plotRegression(PLSResults, ncompValue = 10)
+```
+
+

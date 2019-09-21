@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Rbuildignore
+inst/doc
+doc/*.html
+doc/*.R
+Meta
+doc

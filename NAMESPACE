@@ -1,0 +1,54 @@
+#Has few conflicts in methods.
+# TODO : Use importFrom, will remove warnings.
+# import(corrplot)
+import(pls)
+import(yacca)
+import(FRCC)
+import(STRINGdb)
+import(RCurl)
+import(BiocCheck)
+import(httr)
+import(XML)
+import(RJSONIO)
+import(plyr)
+import(mygene)
+import(gridExtra)
+import(CCA)
+import(utils)
+importFrom("grDevices", "dev.off", "png")
+importFrom("graphics", "par")
+importFrom("stats", "biplot", "predict")
+import(igraph)
+
+# Export NEW PUBLIC API
+export(clusterUsingOntology)
+export(mergeChEBIOntologyWithChildFavoring)
+export(mapReactomePathwaysUnderOrganism)
+export(getStringNeighbours)
+export(readGroupsAsDf)
+export(makeCanonicalCorrelationAnalysis)
+export(plotCanonicalCorrelationAnalysisResults)
+export(makePartialLeastSquaresRegression)
+export(plotRmsepForPLS)
+export(plotRegression)
+export(createFunctionalInteractionsDataFrame)
+export(makePermutationTestOnCCA)
+export(makeCCAOnGroups)
+export(makePermutationTestOnPLS)
+export(makePLSOnGroups)
+
+# DEV Exports.
+export(mapFromStringIdsToEnsembleIds)
+export(getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage)
+export(firstExistsInReactomeChebiOntology)
+
+# Expoet functions
+export(setUpReactomeMapping)
+export(decorateByReactomeData)
+export(decorateByStringDbData)
+
+# Export CONST
+export(taxonIdToReactomeCodes)
+# Fill it in future.
+exportClasses()
+exportMethods()

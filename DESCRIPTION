@@ -1,0 +1,49 @@
+Package: OmicsON
+Type: Package
+Title: OmicsON is a package implementing workflow for finding associations acrossomics data sets
+Version: 0.99.0
+Date: 2015-09-25
+Authors@R: c(
+    person("Monika", "Piwowar", email = "mpiwowar@cyf-kr.edu.pl", role =  "aut"),
+    person("Wiktor", "Jurkowski", email = "Wiktor.Jurkowski@tgac.ac.uk", role = "aut"),
+    person("Ewa", "Gajda", email = "Ewaa.Gajda@gmail.com", role =  "aut"),
+    person("Sonia", "Wrobel", email = "soniawrobel1@gmail.com", role =  "aut"),
+    person("Cezary", "Turek", email = "Cezary.Turek@gmail.com", role =  c("aut", "cre")))
+Maintainer: Cezary Turek <cezary.turek@gmail.com>
+Description: Packacge description, what OmicsON does.
+License: GNU GPL
+LazyData: TRUE
+#: #: Packages with this flow dependencies: A -> B -> C and A -> C should be on Depends list.
+Imports:
+    RCurl,
+    RJSONIO,
+    XML,
+    pls,
+    yacca,
+    FRCC,
+    httr,
+    STRINGdb,
+    BiocCheck,
+    CCA,
+    gridExtra,
+    mygene (>= 1.10.0),
+    utils,
+    stats
+Depends:
+    R (>= 3.3.0),
+    igraph,
+    plyr (>= 1.8.4)
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr
+Collate:
+    'Utils.R'
+    'Reactome.R'
+    'Chebi.R'
+    'ChebiReactomeOntology.R'
+    'SimilarityClustering.R'
+    'MapReactome.R'
+    'NewPublicApi.R'
+RoxygenNote: 6.1.1

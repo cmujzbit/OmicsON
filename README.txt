@@ -2,11 +2,11 @@ Prefered/supported version of R is 3.5.3.
 
 Use this command to install OmicsON package:
 
-Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS=TRUE)
 install.packages("BiocManager")
 install.packages("devtools")
 BiocManager::install(pkgs = c("STRINGdb", "BiocCheck", "mygene"))
-devtools::install_github(repo = "cmujzbit/OmicsON", dependencies = TRUE)
+Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS=TRUE)
+devtools::install_github(repo = "cmujzbit/OmicsON", dependencies = TRUE, force = TRUE)
 
 
 Short analysis example:

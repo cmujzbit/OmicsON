@@ -5,8 +5,6 @@ Version: 0.99.0
 Date: 2015-09-25
 Authors@R: c(
     person("Monika", "Piwowar", email = "mpiwowar@cyf-kr.edu.pl", role =  "aut"),
-    person("Wiktor", "Jurkowski", email = "Wiktor.Jurkowski@tgac.ac.uk", role = "aut"),
-    person("Ewa", "Gajda", email = "Ewaa.Gajda@gmail.com", role =  "aut"),
     person("Sonia", "Wrobel", email = "soniawrobel1@gmail.com", role =  "aut"),
     person("Cezary", "Turek", email = "Cezary.Turek@gmail.com", role =  c("aut", "cre")))
 Maintainer: Cezary Turek <cezary.turek@gmail.com>

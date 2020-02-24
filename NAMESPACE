@@ -25,30 +25,31 @@ export(clusterUsingOntology)
 export(mergeChEBIOntologyWithChildFavoring)
 export(mapReactomePathwaysUnderOrganism)
 export(getStringNeighbours)
-export(readGroupsAsDf)
 export(makeCanonicalCorrelationAnalysis)
 export(plotCanonicalCorrelationAnalysisResults)
 export(makePartialLeastSquaresRegression)
 export(plotRmsepForPLS)
 export(plotRegression)
 export(createFunctionalInteractionsDataFrame)
-export(makePermutationTestOnCCA)
-export(makeCCAOnGroups)
-export(makePermutationTestOnPLS)
-export(makePLSOnGroups)
+export(readGroupsAsDf)
+#export(makePermutationTestOnCCA)
+#export(makeCCAOnGroups)
+#export(makePermutationTestOnPLS)
+#export(makePLSOnGroups)
 
 # DEV Exports.
 export(mapFromStringIdsToEnsembleIds)
 export(getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage)
 export(firstExistsInReactomeChebiOntology)
 
-# Expoet functions
+# Export functions
 export(setUpReactomeMapping)
 export(decorateByReactomeData)
 export(decorateByStringDbData)
 
 # Export CONST
 export(taxonIdToReactomeCodes)
+
 # Fill it in future.
 exportClasses()
 exportMethods()

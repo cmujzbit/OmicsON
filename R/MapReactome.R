@@ -1,5 +1,6 @@
 
 # NEW PUBLIC API:
+#' @title OmicsON - private function.
 clusterUsingOntology <- function(chebiIdsDataFrame, rootColumnName, ontologyRepresentatnion) {
     ontologyDataFrame <- ontologyRepresentatnion(baseData = chebiIdsDataFrame, rootColumnName = rootColumnName)
     ontologyDataFrame
@@ -7,6 +8,7 @@ clusterUsingOntology <- function(chebiIdsDataFrame, rootColumnName, ontologyRepr
 
 
 # NEW PUBLIC API:
+#' @title OmicsON - private function.
 mapReactomePathwaysUnderOrganism <- function(chebiOntologyIds, organismTaxonomyId='9606', idsColumnName = 'ontologyId', rootColumnName = 'root') {
     # x <- c("supp", "dose")
     if (is.null(rootColumnName)) {
@@ -76,6 +78,7 @@ taxonIdToReactomeCodes[['9823']] <- list(speciesName='Sus scrofa', speciesCode='
 
 
 # NEW PUBLIC API
+#' @title OmicsON - private function.
 getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9606, stringDbVersion = "10", idsColumnName = 'ontologyId', rootColumnName = 'root', listOfEnsembleIdColumnName = 'ensembleIds') {
     if (is.null(rootColumnName)) {
         columnsUseInIteration <- c(idsColumnName)
@@ -110,6 +113,7 @@ getStringNeighbours <- function(chebiIdsToReactomePathways, stringOrganismId = 9
 
 
 # NEW API
+#' @title OmicsON - private function.
 mapFromStringIdsToEnsembleIds <- function(vactofOfStringIds) {
     ensembleIds <- laply(vactofOfStringIds, .fun = function(vectorElement){
         ensemblePeptideId <- strsplit(vectorElement, "[.]")[[1]][2]
@@ -168,6 +172,7 @@ getSymbolsBaseOnUniProtIdsUsingMyGenePackage <- function(gensIdsVector, organism
 
 
 # NEW API.
+#' @title OmicsON - private function.
 getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage <- function(gensIdsVector, organismTaxonomyId) {
     equivalentEnsemlProteinsIdsVector <- character(0)
     if (0 != length(gensIdsVector)){
@@ -184,6 +189,7 @@ getSymbolsBaseOnEnsemblPeptidIdsUsingMyGenePackage <- function(gensIdsVector, or
 }
 
 # NEW PUBLIC API
+#' @title OmicsON - private function.
 readGroupsAsDf <- function(pathToFileWithGroupDefinition ) {
     maxColLength <- max(count.fields(pathToFileWithGroupDefinition, sep = '\t'))
     model <- read.table(file = pathToFileWithGroupDefinition, header = TRUE, fill = TRUE,
@@ -200,6 +206,34 @@ reduceCorrelation <- function(matrix, cutoff = 1) {
 }
 
 # NEW API CCA
+
+#' @title Calculate CCA on data returned from decoration methods.
+#' @description Function is used to easily perform CCA analysis on functional interactions
+#' data frames, those data frames are returned from OmicsON::createFunctionalInteractionsDataFrame
+#' which works directly on data returned from functions responsible for decoration.
+#' To close workflow, you can then use
+#' dedicated plotting function on returned data, which is OmicsON::plotCanonicalCorrelationAnalysisResults.
+#' @param xNamesVector A vector of names from functional interactions data frame. Mostly genes symbols.
+#' @param yNamesVector A vector of names from functional interactions data frame. Mostly root column.
+#' @param XDataFrame A data frame with data to CCA analysis.
+#' This argument is strongly connected with xNamesVector arg.
+#' @param YDataFrame A data frame with data to CCA analysis.
+#' This argument is strongly connected with yNamesVector arg.
+#' @param xCutoff You can use it to remove highly correlated variables on XDataFrame.
+#' @param yCutoff You can use it to remove highly correlated variables on YDataFrame.
+#' @param scalingFactor scaling factor for input data.
+#' @return list with CCA analysis data.
+#' @examples
+#' ontology2GenesSymboleFromEnsembleFunctionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(
+#' decoratedByReactome,
+#' singleIdColumnName = 'ontologyId',
+#' idsListColumnName = 'genesSymbolsFromEnsemble')
+#' ccaResultsEnsemble <- OmicsON::makeCanonicalCorrelationAnalysis(
+#' xNamesVector = ontology2GenesSymboleFromEnsembleFunctionalInteractions$genesSymbolsFromEnsemble,
+#' yNamesVector = ontology2GenesSymboleFromEnsembleFunctionalInteractions$root,
+#' XDataFrame = transcriptomicsInputData,
+#' YDataFrame = lipidomicsInputData, xCutoff = 0.5, yCutoff = 0.75)
+#'
 makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFrame, YDataFrame,
                                              xCutoff = 1, yCutoff = 1, scalingFactor = 1) {
 
@@ -277,20 +311,16 @@ makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFr
 
 
 # NEW PUBLIC API
+#' @title OmicsON - private function.
 makePermutationTestOnCCA <- function(XDataFrame, YDataFrame, numberOfRowsForTestOnX, numberOfRowsForTestOnY, numberOfIterations = 100, countedCCA) {
-    # print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
-    # print(numberOfRowsForTestOnX)
-    # print(numberOfRowsForTestOnY)
-    # print()
-    # print()
+
     vectorOfXrd <- as.numeric();
     vectorOfYrd <- as.numeric();
     for (i in 1:numberOfIterations) {
         xNV <- as.character(XDataFrame[sample(nrow(XDataFrame), numberOfRowsForTestOnX), ][,1])
         yNV <- as.character(YDataFrame[sample(nrow(YDataFrame), numberOfRowsForTestOnY), ][,1])
-        ccaResult <- OmicsON::makeCanonicalCorrelationAnalysis(xNamesVector = xNV, yNamesVector = yNV, XDataFrame = XDataFrame, YDataFrame = YDataFrame)
-        # print("++++++++++++++++++++++++++++++++++")
-        # print.default(ccaResult)
+        ccaResult <- OmicsON::makeCanonicalCorrelationAnalysis(xNamesVector = xNV, yNamesVector = yNV,
+                                                               XDataFrame = XDataFrame, YDataFrame = YDataFrame)
         if (is.na(ccaResult) || is.null(ccaResult)) {
 
         } else {
@@ -299,15 +329,6 @@ makePermutationTestOnCCA <- function(XDataFrame, YDataFrame, numberOfRowsForTest
         }
     }
 
-    # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    # print.default(countedCCA)
-    # print("*****************************")
-    # print(countedCCA$xrd)
-    # print(countedCCA$yrd)
-    # print(vectorOfXrd)
-    # print(vectorOfYrd)
-    # print(mean(vectorOfXrd))
-    # print(mean(vectorOfYrd))
     meanOfXrd <- NA;
     meanOfYrd <- NA;
     if (0 != length(vectorOfXrd)) {
@@ -325,12 +346,13 @@ makePermutationTestOnCCA <- function(XDataFrame, YDataFrame, numberOfRowsForTest
 
 
 # NEW PUBLIC API
-makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbolsFromEnsemble', groupsDataDF, mappingDataDF){
+#' @title OmicsON - private function.
+makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF,
+                            leftMappingColumnName = 'root',
+                            rightMappingColumnName = 'genesSymbolsFromEnsemble', groupsDataDF, mappingDataDF){
+
     ddply(.data = groupsDefinitionDF['Molecules'], .(Molecules), .fun = function(dfElement) {
-        # print("???????????????????")
-        # print(dfElement)
         rightSideIdsToAnalys <- unlist(strsplit(as.character(dfElement), split = " "));
-        # print(rightSideIdsToAnalys)
         leftSideIdsToAnalys <- mappingDF[mappingDF[[leftMappingColumnName]] %in% rightSideIdsToAnalys,][[rightMappingColumnName]]
         leftSideIdsToAnalys <- unique(unlist(leftSideIdsToAnalys))
 
@@ -340,10 +362,6 @@ makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName
             XDataFrame = mappingDataDF,
             YDataFrame = groupsDataDF)
 
-        # print("######################################")
-        # print(ccaResults)
-        # print("---------------------------")
-        # print.default(ccaResults)
         #TODO : Use user defined column name instead of symbol. ChEBI column too.
         numberOfRowsForTestOnX <- nrow(mappingDataDF[mappingDataDF$symbol %in% leftSideIdsToAnalys, ])
         numberOfRowsForTestOnY <- nrow(groupsDataDF[groupsDataDF$ChEBI %in% rightSideIdsToAnalys, ])
@@ -360,8 +378,19 @@ makeCCAOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName
     })
 }
 
-
 # NEW PUBLIC API
+#' @title Plot CCA analysis results.
+#' @description Function is used to plotting results from CCA analysis.
+#' @param ccaResults Results from CCA analysis performed
+#' by OmicsON::makeCanonicalCorrelationAnalysis function.
+#' @param x.name Name for x-axis.
+#' @param y.name Name for y-axis.
+#' @param cv Number of canonical variates.
+#' @param thirdLineText Extra text on plot.
+#' @param ... Arguments passed to helio.plot function.
+#' @examples
+#' OmicsON::plotCanonicalCorrelationAnalysisResults(ccaResults = ccaResults)
+#'
 plotCanonicalCorrelationAnalysisResults <- function(ccaResults,
                                                     x.name = "Transcriptomics",
                                                     y.name = "Lipidomics",
@@ -377,6 +406,36 @@ plotCanonicalCorrelationAnalysisResults <- function(ccaResults,
 
 
 # NEW PUBLIC API
+#' @title Calculate PLS on data returned from decoration methods.
+#' @description Function is used to easily perform PLS analysis on functional interactions
+#' data frames, those data frames are returned from OmicsON::createFunctionalInteractionsDataFrame
+#' which works directly on data returned from functions responsible for decoration.
+#' To close workflow, you can then use
+#' dedicated plotting functions on returned data, which are
+#' OmicsON::plotRmsepForPLS and OmicsON::plotRegression.
+#' @param xNamesVector A vector of names from functional interactions data frame. Mostly genes symbols.
+#' @param yNamesVector A vector of names from functional interactions data frame. Mostly root column.
+#' @param XDataFrame A data frame with data to PLS analysis.
+#' This argument is strongly connected with xNamesVector arg.
+#' @param YDataFrame A data frame with data to PLS analysis.
+#' This argument is strongly connected with yNamesVector arg.
+#' @param xCutoff You can use it to remove highly correlated variables on XDataFrame.
+#' @param yCutoff You can use it to remove highly correlated variables on YDataFrame.
+#' @param ncompValue Number of components in PLS analysis.
+#' @param formula Formula to use in PLs, default is Y ~ X.
+#' @param ... Other arguments put into pls::plsr function, which is responsible for calculations.
+#' @return List with PLS results data.
+#' @examples
+#' ontology2GenesSymboleFromEnsembleFunctionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(
+#' decoratedByReactome,
+#' singleIdColumnName = 'ontologyId',
+#' idsListColumnName = 'genesSymbolsFromEnsemble')
+#' ccaResultsEnsemble <- OmicsON::makeCanonicalCorrelationAnalysis(
+#' xNamesVector = ontology2GenesSymboleFromEnsembleFunctionalInteractions$genesSymbolsFromEnsemble,
+#' yNamesVector = ontology2GenesSymboleFromEnsembleFunctionalInteractions$root,
+#' XDataFrame = transcriptomicsInputData,
+#' YDataFrame = lipidomicsInputData, xCutoff = 0.5, yCutoff = 0.75)
+#'
 makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector,
                                               XDataFrame, YDataFrame,
                                               formula = Y ~ X,
@@ -449,6 +508,7 @@ makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector,
 }
 
 # NEW PUBLIC API
+#' @title OmicsON - private function.
 makePermutationTestOnPLS <- function(XDataFrame, YDataFrame, numberOfRowsForTestOnX, numberOfRowsForTestOnY, numberOfIterations = 100, countedPLS) {
     # print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
     # print(numberOfRowsForTestOnX)
@@ -496,6 +556,7 @@ makePermutationTestOnPLS <- function(XDataFrame, YDataFrame, numberOfRowsForTest
 }
 
 # NEW PUBLIC API
+#' @title OmicsON - private function.
 makePLSOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName = 'root', rightMappingColumnName = 'genesSymbolsFromEnsemble', groupsDataDF, mappingDataDF){
     ddply(.data = groupsDefinitionDF['Molecules'], .(Molecules), .fun = function(dfElement) {
         # print("???????????????????")
@@ -532,6 +593,19 @@ makePLSOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName
 }
 
 # NEW PUBLIC API
+#' @title Plot RMSEP for PLS analysis results.
+#' @description Function is used to plotting Root Mean Square Error of Prediction
+#' for PLS analysis.
+#' @param PLSResult Results from PLS analysis performed
+#' by OmicsON::makePartialLeastSquaresRegression function.
+#' @param resetToActualMfrow This plot is multiplot,
+#' use this flag to get back to your default plotting in R.
+#' @param selectionVector A vector with names of variables to plot.
+#' @param thirdLineText Extra text on plot.
+#' @param ... Arguments passed to plot function.
+#' @examples
+#' OmicsON::plotRmsepForPLS(PLSResults)
+#'
 plotRmsepForPLS <- function(PLSResult, resetToActualMfrow = TRUE,
                             thirdLineText = "",
                             selectionVector = colnames(PLSResult$coefficients), ...) {
@@ -562,9 +636,16 @@ plotRmsepForPLS <- function(PLSResult, resetToActualMfrow = TRUE,
 }
 
 
-
-
 # NEW PUBLIC API
+#' @title Plot PLS analysis results.
+#' @description Function is used to plotting results/predictions
+#' from PLS analysis.
+#' @param PLSResult Results from PLS analysis performed
+#' by OmicsON::makePartialLeastSquaresRegression function.
+#' @param ncompValue A number of components to print.
+#' @examples
+#' OmicsON::plotRegression(PLSResults, ncompValue = 2)
+#'
 plotRegression <- function(PLSResult, ncompValue = NULL) {
     if (is.null(ncompValue)) {
         plot(PLSResult, asp = 1, line = TRUE)
@@ -611,7 +692,25 @@ createFunctionalInteractionsDataFrameOld <- function(chebiToReactomeDataFrame, s
 
 
 # NEW PUBLIC API
-createFunctionalInteractionsDataFrame <- function(chebiToReactomeDataFrame, singleIdColumnName = 'ontologyId', idsListColumnName = 'ensembleIds',
+#' @title Create a functional interactions data frame.
+#' @description You can create a functional interactions data frame
+#' from returned decorated data frames using this function.
+#' All analytical functions works on functional interactions data frames
+#' for more generic approach. In general this functions split mapping
+#' one to many for bench of mappings one to one.
+#' @param chebiToReactomeDataFrame A data frame returned from any of decorated functions.
+#' @param singleIdColumnName Column with single ids per row.
+#' @param idsListColumnName Column with multiple, list of ids per row.
+#' @param attachRootColumn Use if you are interesting in attaching of root column into results.
+#' @param rootIdCollumnName Name used in returned data frame for representation of root data column.
+#' @return Functional interactions data frame.
+#' @examples
+#' ontology2EnsembleFunctionalInteractions <- OmicsON::createFunctionalInteractionsDataFrame(
+#' chebiToReactomeDataFrame = decoratedByReactome,
+#' singleIdColumnName = 'ontologyId', idsListColumnName = 'ensembleIds')
+#'
+createFunctionalInteractionsDataFrame <- function(chebiToReactomeDataFrame, singleIdColumnName = 'ontologyId',
+                                                  idsListColumnName = 'ensembleIds',
                                                   attachRootColumn = TRUE, rootIdCollumnName = 'root') {
     functionalInteractionsDataFrame <- ddply(.data = chebiToReactomeDataFrame, c(singleIdColumnName), .fun = function(dfElement) {
         functionalInteractionsRows <- adply(.data = dfElement[1,c(idsListColumnName)][[1]], .margins = 1, dfff = dfff, .fun = function(listElement, dfff) {

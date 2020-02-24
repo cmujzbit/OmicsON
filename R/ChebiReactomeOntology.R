@@ -1,4 +1,5 @@
 
+#' @title OmicsON - private function.
 firstExistsInReactomeChebiOntology <- function(baseData, rootColumnName) {
     # print("firstExistsInReactomeChebiOntology")
     # print(as.character(baseData[, rootColumnName]))
@@ -47,6 +48,7 @@ firstExistsInReactomeChebiOntology <- function(baseData, rootColumnName) {
 }
 
 # NEW PUBLIC API:
+#' @title OmicsON - private function.
 mergeChEBIOntologyWithChildFavoring <- function(chebiOntologyDataFrame, rootColumnName = 'root') {
     mergeOntologyDataFrame <- ddply(chebiOntologyDataFrame, c(rootColumnName), function(dataFrameRow){
         ontologyId <- ""

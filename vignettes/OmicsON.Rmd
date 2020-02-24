@@ -71,7 +71,7 @@ knitr::kable(transcriptomicsInputData[1:10, 1:7], caption = "Transcriptomics dat
 
 ### Decorate data by Reactome data
 
-As soon as you set up OmincsON and input data are loaded, you are ready to decorate data by data presented in Reactome database. It is done by searching of ontologically related molecules present in Reactome's pathways. For further processes in that vignette we are using minimal input data. Rows are chosen to present possible border cases in a short time. CHEBI:28661 has representation in Reactome pathways. CHEBI:36036, CHEBI:61205 are not not presented in Reactome mapping, but we can find  representat of that group by ontology in ChEBI database - CHEBI:53460, CHEBI:53487. CHEBI:35465 is not interesting case, not presented and no representants in ChEBI ontology, so mapping and decoration is empty for that id.
+As soon as you set up OmincsON and input data are loaded, you are ready to decorate data by data presented in Reactome database. It is done by searching of ontologically related molecules presented in Reactome's pathways. For further processes in that vignette we are using minimal input data. Rows are chosen to present possible border cases in a short time. CHEBI:28661 has representation in Reactome pathways. CHEBI:36036, CHEBI:61205 are not not presented in Reactome mapping, but we can find  representat of that group by ontology in ChEBI database - CHEBI:53460, CHEBI:53487. CHEBI:35465 is not interesting case, not presented and no representants in ChEBI ontology, so mapping and decoration is empty for that id.
 
 ```{r, echo=TRUE, results='hide'}
 decoratedByReactome <- OmicsON::decorateByReactomeData(
@@ -248,7 +248,8 @@ PLSResults <- OmicsON::makePartialLeastSquaresRegression(
     xNamesVector = ontology2GenesSymboleFromStringNarrowFunctionalInteractions$stringGenesSymbolsNarrow,
     yNamesVector = ontology2GenesSymboleFromStringNarrowFunctionalInteractions$root,
     XDataFrame = transcriptomicsInputData,
-    YDataFrame = lipidomicsInputData)
+    YDataFrame = lipidomicsInputData,
+    ncompValue = 5)
 ```
 
 How to plot results from PLS? Below you can find code which represents PLS results in user friendly form:
@@ -258,7 +259,7 @@ OmicsON::plotRmsepForPLS(PLSResults)
 ```  
 
 ```{r, fig.show='hold', fig.width=7, fig.height=5, echo=TRUE}
-OmicsON::plotRegression(PLSResults, ncompValue = 10)
+OmicsON::plotRegression(PLSResults, ncompValue = 5)
 ```
 
 

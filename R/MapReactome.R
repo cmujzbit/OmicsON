@@ -75,6 +75,9 @@ taxonIdToReactomeCodes[['4896']] <- list(speciesName='Schizosaccharomyces pombe'
 taxonIdToReactomeCodes[['8364']] <- list(speciesName='Xenopus tropicalis', speciesCode='XTR')
 taxonIdToReactomeCodes[['59729']] <- list(speciesName='Taeniopygia guttata', speciesCode='TGU')
 taxonIdToReactomeCodes[['9823']] <- list(speciesName='Sus scrofa', speciesCode='SSC')
+# Exampe of record for mouse: https://reactome.org/content/schema/instance/browser/48892
+taxonIdToReactomeCodes[['10090']] <- list(speciesName='Mus musculus', speciesCode='MMU')
+
 
 
 # NEW PUBLIC API
@@ -395,13 +398,24 @@ plotCanonicalCorrelationAnalysisResults <- function(ccaResults,
                                                     x.name = "Transcriptomics",
                                                     y.name = "Lipidomics",
                                                     cv = 1, thirdLineText = "",
+                                                    width=1366, height=768,
+                                                    image_file_path = NULL,
+                                                    plot_type=png,
                                                     ...) {
 
+    plot_to_file <- !is.null(image_file_path)
+    if (plot_to_file) {
+        plot_type(file=image_file_path,
+                  width=width, height=height)
+    }
     helio.plot(ccaResults, x.name = x.name, y.name = y.name,
                sub = paste("Canonical Variate", cv, "\n",
                            "xCutoff = ", ccaResults$xCutoff, ",",
                            "yCutoff = ", ccaResults$yCutoff, "\n",
                            thirdLineText, sep = " "), ...)
+    if (plot_to_file) {
+        dev.off()
+    }
 }
 
 
@@ -608,7 +622,10 @@ makePLSOnGroups <- function(groupsDefinitionDF, mappingDF, leftMappingColumnName
 #'
 plotRmsepForPLS <- function(PLSResult, resetToActualMfrow = TRUE,
                             thirdLineText = "",
-                            selectionVector = colnames(PLSResult$coefficients), ...) {
+                            selectionVector = colnames(PLSResult$coefficients),
+                            width=1366, height=768,
+                            image_file_path = NULL,
+                            plot_type=png, ...) {
 
     actualMfrow <- par("mfrow")
 
@@ -628,7 +645,17 @@ plotRmsepForPLS <- function(PLSResult, resetToActualMfrow = TRUE,
                     thirdLineText, sep = "")
     }
 
+    plot_to_file <- !is.null(image_file_path)
+    if (plot_to_file) {
+        plot_type(file=image_file_path,
+                  width=width, height=height)
+    }
+
     plot(rmsep, legendpos = "topright", xlab = sub, ...)
+
+    if (plot_to_file) {
+        dev.off()
+    }
 
     if (resetToActualMfrow) {
         par(mfrow = actualMfrow)
@@ -646,14 +673,29 @@ plotRmsepForPLS <- function(PLSResult, resetToActualMfrow = TRUE,
 #' @examples
 #' OmicsON::plotRegression(PLSResults, ncompValue = 2)
 #'
-plotRegression <- function(PLSResult, ncompValue = NULL) {
+plotRegression <- function(PLSResult, ncompValue = NULL,
+                           width=1366, height=768,
+                           image_file_path = NULL,
+                           plot_type=png) {
+
     if (is.null(ncompValue)) {
         plot(PLSResult, asp = 1, line = TRUE)
     } else {
         if (ncompValue > PLSResult$ncomp) {
             ncompValue <- PLSResult$ncomp
         }
+
+        plot_to_file <- !is.null(image_file_path)
+        if (plot_to_file) {
+            plot_type(file=image_file_path,
+                      width=width, height=height)
+        }
+
         plot(PLSResult, ncomp = ncompValue, asp = 1, line = TRUE)
+
+        if (plot_to_file) {
+            dev.off()
+        }
     }
 }
 

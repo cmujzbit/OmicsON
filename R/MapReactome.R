@@ -240,6 +240,11 @@ reduceCorrelation <- function(matrix, cutoff = 1) {
 makeCanonicalCorrelationAnalysis <- function(xNamesVector, yNamesVector, XDataFrame, YDataFrame,
                                              xCutoff = 1, yCutoff = 1, scalingFactor = 1) {
 
+    xNamesVector <- toupper(xNamesVector)
+    yNamesVector <- toupper(yNamesVector)
+    XDataFrame[, 1] <- toupper(XDataFrame[, 1])
+    YDataFrame[, 1] <- toupper(YDataFrame[, 1])
+
     XDataFrame[seq(2,length(XDataFrame))] <- XDataFrame[seq(2,length(XDataFrame))] * scalingFactor
     YDataFrame[seq(2,length(YDataFrame))] <- YDataFrame[seq(2,length(YDataFrame))] * scalingFactor
 
@@ -455,6 +460,11 @@ makePartialLeastSquaresRegression <- function(xNamesVector, yNamesVector,
                                               formula = Y ~ X,
                                               ncompValue = 10,
                                               xCutoff = 1, yCutoff = 1, ...) {
+
+    xNamesVector <- toupper(xNamesVector)
+    yNamesVector <- toupper(yNamesVector)
+    XDataFrame[, 1] <- toupper(XDataFrame[, 1])
+    YDataFrame[, 1] <- toupper(YDataFrame[, 1])
 
     commonColNames <- intersect(colnames(XDataFrame), colnames(YDataFrame))
     XDataFrame <- XDataFrame[
